@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger &mdash; Banking Information System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0B1E33;
+  --ink-soft:#1C3350;
+  --paper:#F7F5F0;
+  --paper-dim:#EDEAE1;
+  --rule:#D8D2C2;
+  --gold:#B8935B;
+  --emerald:#1F6F54;
+  --emerald-soft:#E4EFE9;
+  --amber:#B5542A;
+  --amber-soft:#F6E6DC;
+  --white:#FFFFFF;
+  --shadow: 0 10px 30px rgba(11,30,51,0.10);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--gold); color:var(--white);}
+h1,h2,h3,.display{font-family:'Fraunces',serif;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+a{color:inherit;}
+
+/* ---------- Screen scaffolding ---------- */
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* ---------- Auth ---------- */
+#auth-screen.active{
+  min-height:100vh;
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
+}
+.auth-wrap{
+  width:100%;
+  max-width:1180px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns: 1.05fr 1fr;
+  min-height:100vh;
+}
+.auth-hero{
+  background:var(--ink);
+  color:var(--paper);
+  padding:64px 56px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  position:relative;
+  overflow:hidden;
+}
+.auth-hero::after{
+  content:"";
+  position:absolute;
+  right:-120px; bottom:-120px;
+  width:340px; height:340px;
+  border:1px solid rgba(247,245,240,0.14);
+  border-radius:50%;
+}
+.auth-hero::before{
+  content:"";
+  position:absolute;
+  right:-40px; bottom:-40px;
+  width:220px; height:220px;
+  border:1px solid rgba(247,245,240,0.18);
+  border-radius:50%;
+}
+.brand{
+  display:flex; align-items:center; gap:12px;
+  font-family:'Fraunces',serif;
+  font-size:22px; font-weight:600; letter-spacing:0.01em;
+}
+.brand .mark{
+  width:34px;height:34px;border-radius:50%;
+  border:1.5px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--gold); font-size:16px; font-family:'Fraunces',serif;
+}
+.hero-copy h1{
+  font-size:44px; line-height:1.12; font-weight:500; margin:0 0 18px 0;
+  max-width:9.5ch;
+}
+.hero-copy p{
+  font-size:15.5px; line-height:1.65; color:rgba(247,245,240,0.72);
+  max-width:38ch; margin:0;
+}
+.hero-note{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px; letter-spacing:0.06em; text-transform:uppercase;
+  color:rgba(247,245,240,0.5);
+  border-top:1px solid rgba(247,245,240,0.16);
+  padding-top:18px;
+}
+.auth-panel{
+  background:var(--white);
+  padding:64px 56px;
+  display:flex; flex-direction:column; justify-content:center;
+}
+.tabs{display:flex; gap:0; margin-bottom:34px; border-bottom:1px solid var(--rule);}
+.tab-btn{
+  font-family:'Fraunces',serif; font-size:17px; font-weight:500;
+  background:none; border:none; cursor:pointer; color:#9A9284;
+  padding:0 0 14px 0; margin-right:32px; position:relative;
+}
+.tab-btn.active{color:var(--ink);}
+.tab-btn.active::after{
+  content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--gold);
+}
+.field{margin-bottom:18px;}
+.field label{
+  display:block; font-size:11.5px; letter-spacing:0.07em; text-transform:uppercase;
+  color:#8A8375; margin-bottom:7px; font-weight:600;
+}
+.field input, .field select, .field textarea{
+  width:100%; padding:12px 14px; border:1px solid var(--rule); border-radius:3px;
+  background:var(--paper); font-family:'Inter',sans-serif; font-size:14.5px; color:var(--ink);
+  transition:border-color .15s ease, background .15s ease;
+}
+.field input:focus, .field select:focus, .field textarea:focus{
+  outline:none; border-color:var(--gold); background:var(--white);
+}
+.row-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:13px 22px; border-radius:3px; border:none; cursor:pointer;
+  font-family:'Inter',sans-serif; font-weight:600; font-size:14px; letter-spacing:0.01em;
+  transition:transform .12s ease, box-shadow .12s ease, background .15s ease;
+}
+.btn-primary{background:var(--ink); color:var(--paper);}
+.btn-primary:hover{background:var(--ink-soft); box-shadow:var(--shadow);}
+.btn-ghost{background:transparent; color:var(--ink); border:1px solid var(--rule);}
+.btn-ghost:hover{border-color:var(--ink);}
+.btn-full{width:100%;}
+.btn-sm{padding:9px 16px; font-size:13px;}
+.btn-danger{background:var(--amber-soft); color:var(--amber);}
+.btn-danger:hover{background:#f0d8c8;}
+
+.form-block{display:none;}
+.form-block.active{display:block;}
+.helptext{font-size:12.5px; color:#8A8375; margin-top:-8px; margin-bottom:18px; line-height:1.5;}
+
+/* ---------- Alert / confirmation banners ---------- */
+.banner{
+  border-radius:3px; padding:13px 16px; font-size:13.5px; margin-bottom:18px;
+  display:none; align-items:flex-start; gap:10px; line-height:1.5;
+}
+.banner.show{display:flex;}
+.banner-success{background:var(--emerald-soft); color:var(--emerald); border:1px solid #bfe0d1;}
+.banner-error{background:var(--amber-soft); color:var(--amber); border:1px solid #e6c3ac;}
+.banner .dot{width:6px;height:6px;border-radius:50%;background:currentColor; margin-top:6px; flex:none;}
+
+/* ---------- App shell ---------- */
+#app-screen.active{display:flex; min-height:100vh;}
+.sidebar{
+  width:250px; flex:none; background:var(--ink); color:var(--paper);
+  display:flex; flex-direction:column; padding:30px 22px;
+}
+.sidebar .brand{margin-bottom:38px;}
+.side-account{
+  background:rgba(247,245,240,0.06); border:1px solid rgba(247,245,240,0.14);
+  border-radius:4px; padding:14px 16px; margin-bottom:30px;
+}
+.side-account .label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:rgba(247,245,240,0.5); margin-bottom:5px;}
+.side-account .num{font-family:'IBM Plex Mono',monospace; font-size:15px; letter-spacing:0.03em; color:var(--gold);}
+.side-account .bal{font-family:'Fraunces',serif; font-size:22px; margin-top:8px;}
+.nav-list{list-style:none; margin:0; padding:0; flex:1;}
+.nav-list li{margin-bottom:4px;}
+.nav-btn{
+  width:100%; text-align:left; background:none; border:none; cursor:pointer;
+  color:rgba(247,245,240,0.68); padding:11px 12px; border-radius:3px; font-size:14px;
+  font-family:'Inter',sans-serif; font-weight:500; display:flex; align-items:center; gap:10px;
+  transition:background .12s ease, color .12s ease;
+}
+.nav-btn .num-tag{font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(247,245,240,0.35);}
+.nav-btn:hover{background:rgba(247,245,240,0.06); color:var(--paper);}
+.nav-btn.active{background:var(--gold); color:var(--ink); font-weight:600;}
+.nav-btn.active .num-tag{color:rgba(11,30,51,0.55);}
+.sidebar-foot{border-top:1px solid rgba(247,245,240,0.14); padding-top:16px;}
+
+.main{flex:1; padding:44px 56px; max-width:920px;}
+.panel{display:none;}
+.panel.active{display:block; animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+.panel-head{margin-bottom:30px;}
+.eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.09em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;}
+.panel-head h2{font-size:28px; font-weight:500; margin:0 0 8px 0;}
+.panel-head p{font-size:14px; color:#8A8375; margin:0; max-width:56ch; line-height:1.6;}
+
+.card{background:var(--white); border:1px solid var(--rule); border-radius:5px; padding:28px 30px; box-shadow:var(--shadow);}
+.stat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:26px;}
+.stat{background:var(--white); border:1px solid var(--rule); border-radius:5px; padding:20px 22px;}
+.stat .label{font-size:11px; text-transform:uppercase; letter-spacing:0.07em; color:#8A8375; margin-bottom:10px;}
+.stat .val{font-family:'Fraunces',serif; font-size:26px;}
+.stat .val.pos{color:var(--emerald);}
+.stat .val.neg{color:var(--amber);}
+
+.recent-title{font-size:12px; text-transform:uppercase; letter-spacing:0.07em; color:#8A8375; margin:30px 0 12px 0; font-weight:600;}
+
+/* ---------- Passbook / statement ledger ---------- */
+.ledger{border:1px solid var(--rule); border-radius:5px; overflow:hidden; background:var(--white);}
+.ledger-row{
+  display:grid; grid-template-columns: 100px 1fr 130px 130px 130px;
+  padding:14px 20px; border-bottom:1px solid var(--rule);
+  font-size:13.5px; align-items:center; gap:10px;
+}
+.ledger-row:last-child{border-bottom:none;}
+.ledger-row.head{
+  background:var(--paper-dim); font-family:'IBM Plex Mono',monospace; font-size:10.5px;
+  text-transform:uppercase; letter-spacing:0.06em; color:#8A8375; font-weight:600;
+}
+.ledger-row .date{font-family:'IBM Plex Mono',monospace; color:#8A8375; font-size:12px;}
+.ledger-row .type{
+  display:inline-flex; align-items:center; gap:6px; font-weight:600; font-size:12.5px;
+}
+.chip{width:6px; height:6px; border-radius:50%; flex:none;}
+.chip.deposit{background:var(--emerald);}
+.chip.withdraw{background:var(--amber);}
+.chip.transfer-out{background:var(--amber);}
+.chip.transfer-in{background:var(--emerald);}
+.amt{font-family:'IBM Plex Mono',monospace; text-align:right;}
+.amt.pos{color:var(--emerald);}
+.amt.neg{color:var(--amber);}
+.empty-state{
+  text-align:center; padding:50px 20px; color:#8A8375; font-size:14px;
+}
+.empty-state .glyph{font-family:'Fraunces',serif; font-size:34px; color:var(--rule); margin-bottom:10px;}
+
+/* ---------- Forms in panel ---------- */
+.form-card{max-width:460px;}
+.form-note{
+  font-size:12.5px; color:#8A8375; background:var(--paper-dim); border-radius:3px; padding:10px 13px; margin:16px 0 22px 0; line-height:1.55;
+}
+.confirm-box{
+  background:var(--emerald-soft); border:1px solid #bfe0d1; border-radius:5px; padding:20px 22px; margin-top:20px;
+}
+.confirm-box .ctitle{font-family:'Fraunces',serif; color:var(--emerald); font-size:16px; margin-bottom:10px;}
+.confirm-line{display:flex; justify-content:space-between; font-size:13.5px; padding:5px 0; color:var(--ink-soft);}
+.confirm-line span:last-child{font-family:'IBM Plex Mono',monospace;}
+
+.profile-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 20px;}
+
+@media (max-width: 900px){
+  .auth-wrap{grid-template-columns:1fr;}
+  .auth-hero{display:none;}
+  #app-screen.active{flex-direction:column;}
+  .sidebar{width:100%; flex-direction:row; align-items:center; padding:16px 20px; gap:16px; overflow-x:auto;}
+  .sidebar .brand{margin-bottom:0;}
+  .side-account{display:none;}
+  .nav-list{display:flex; flex:none; gap:4px;}
+  .sidebar-foot{border:none; padding:0;}
+  .main{padding:28px 20px;}
+  .stat-grid{grid-template-columns:1fr;}
+  .ledger-row{grid-template-columns:70px 1fr 90px; font-size:12px;}
+  .ledger-row .bal-col{display:none;}
+  .profile-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH SCREEN ================= -->
+<div id="auth-screen" class="screen active">
+  <div class="auth-wrap">
+    <div class="auth-hero">
+      <div class="brand"><span class="mark">L</span> Ledger</div>
+      <div class="hero-copy">
+        <h1>A clear record of every rupee that moves.</h1>
+        <p>Ledger is a working prototype of a core banking system &mdash; open an account, move money, and watch the passbook write itself in real time.</p>
+      </div>
+      <div class="hero-note">Prototype session &middot; data held in memory only</div>
+    </div>
+    <div class="auth-panel">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="login">Log in</button>
+        <button class="tab-btn" data-tab="register">Open an account</button>
+      </div>
+
+      <div id="banner-auth" class="banner"></div>
+
+      <!-- LOGIN -->
+      <div id="form-login" class="form-block active">
+        <div class="field">
+          <label for="login-acc">Account number</label>
+          <input type="text" id="login-acc" placeholder="LGR-000001" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="login-pass">Password</label>
+          <input type="password" id="login-pass" placeholder="Enter your password">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="handleLogin()">Log in</button>
+        <p class="helptext" style="margin-top:14px;">New here? Switch to &ldquo;Open an account&rdquo; above &mdash; registration takes under a minute.</p>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="form-register" class="form-block">
+        <div class="field">
+          <label for="reg-name">Full name</label>
+          <input type="text" id="reg-name" placeholder="e.g. Santhosh Kumar">
+        </div>
+        <div class="field">
+          <label for="reg-address">Address</label>
+          <input type="text" id="reg-address" placeholder="Street, city, state">
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label for="reg-contact">Contact number</label>
+            <input type="text" id="reg-contact" placeholder="10-digit mobile">
+          </div>
+          <div class="field">
+            <label for="reg-email">Email</label>
+            <input type="email" id="reg-email" placeholder="you@example.com">
+          </div>
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label for="reg-deposit">Initial deposit (&#8377;)</label>
+            <input type="number" id="reg-deposit" placeholder="1000" min="0">
+          </div>
+          <div class="field">
+            <label for="reg-pass">Password</label>
+            <input type="password" id="reg-pass" placeholder="Minimum 4 characters">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="handleRegister()">Create account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP SCREEN ================= -->
+<div id="app-screen" class="screen">
+  <aside class="sidebar">
+    <div class="brand"><span class="mark">L</span> Ledger</div>
+    <div class="side-account">
+      <div class="label">Account number</div>
+      <div class="num" id="side-acc-num">&mdash;</div>
+      <div class="bal" id="side-acc-bal">&#8377;0.00</div>
+    </div>
+    <ul class="nav-list">
+      <li><button class="nav-btn active" data-panel="overview" onclick="showPanel('overview')"><span class="num-tag">01</span> Overview</button></li>
+      <li><button class="nav-btn" data-panel="deposit" onclick="showPanel('deposit')"><span class="num-tag">02</span> Deposit &amp; withdraw</button></li>
+      <li><button class="nav-btn" data-panel="transfer" onclick="showPanel('transfer')"><span class="num-tag">03</span> Transfer funds</button></li>
+      <li><button class="nav-btn" data-panel="statement" onclick="showPanel('statement')"><span class="num-tag">04</span> Statement</button></li>
+      <li><button class="nav-btn" data-panel="profile" onclick="showPanel('profile')"><span class="num-tag">05</span> Account settings</button></li>
+    </ul>
+    <div class="sidebar-foot">
+      <button class="btn btn-ghost btn-full btn-sm" style="color:var(--paper); border-color:rgba(247,245,240,0.25);" onclick="handleLogout()">Log out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <section id="panel-overview" class="panel active">
+      <div class="panel-head">
+        <div class="eyebrow">Account overview</div>
+        <h2 id="ov-hello">Welcome back</h2>
+        <p>A snapshot of your balance and your most recent activity.</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="label">Current balance</div><div class="val" id="ov-balance">&#8377;0.00</div></div>
+        <div class="stat"><div class="label">Total deposits</div><div class="val pos" id="ov-deposits">&#8377;0.00</div></div>
+        <div class="stat"><div class="label">Total withdrawn &amp; sent</div><div class="val neg" id="ov-out">&#8377;0.00</div></div>
+      </div>
+      <div class="recent-title">Recent transactions</div>
+      <div class="ledger" id="ov-recent"></div>
+    </section>
+
+    <!-- DEPOSIT / WITHDRAW -->
+    <section id="panel-deposit" class="panel">
+      <div class="panel-head">
+        <div class="eyebrow">Deposit &amp; withdraw</div>
+        <h2>Move money in or out</h2>
+        <p>Enter an amount and confirm &mdash; your balance updates immediately below.</p>
+      </div>
+      <div id="banner-dw" class="banner"></div>
+      <div class="card form-card">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="deposit-t">Deposit</button>
+          <button class="tab-btn" data-tab="withdraw-t">Withdraw</button>
+        </div>
+        <div id="form-deposit-t" class="form-block active">
+          <div class="field">
+            <label for="dep-amt">Amount to deposit (&#8377;)</label>
+            <input type="number" id="dep-amt" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <button class="btn btn-primary" onclick="handleDeposit()">Confirm deposit</button>
+        </div>
+        <div id="form-withdraw-t" class="form-block">
+          <div class="field">
+            <label for="wd-amt">Amount to withdraw (&#8377;)</label>
+            <input type="number" id="wd-amt" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <p class="helptext">Withdrawals greater than your available balance will be declined.</p>
+          <button class="btn btn-primary" onclick="handleWithdraw()">Confirm withdrawal</button>
+        </div>
+        <div id="dw-confirm"></div>
+      </div>
+    </section>
+
+    <!-- TRANSFER -->
+    <section id="panel-transfer" class="panel">
+      <div class="panel-head">
+        <div class="eyebrow">Transfer funds</div>
+        <h2>Send money to another account</h2>
+        <p>Transfers between registered Ledger accounts settle instantly in this prototype.</p>
+      </div>
+      <div id="banner-tr" class="banner"></div>
+      <div class="card form-card">
+        <div class="field">
+          <label for="tr-acc">Recipient account number</label>
+          <input type="text" id="tr-acc" placeholder="LGR-000002">
+        </div>
+        <div class="field">
+          <label for="tr-amt">Amount to transfer (&#8377;)</label>
+          <input type="number" id="tr-amt" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <button class="btn btn-primary" onclick="handleTransfer()">Send transfer</button>
+        <div id="tr-confirm"></div>
+      </div>
+    </section>
+
+    <!-- STATEMENT -->
+    <section id="panel-statement" class="panel">
+      <div class="panel-head">
+        <div class="eyebrow">Account statement</div>
+        <h2>Full transaction history</h2>
+        <p>Every deposit, withdrawal and transfer on this account, most recent first.</p>
+      </div>
+      <div class="ledger" id="statement-ledger"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="panel-profile" class="panel">
+      <div class="panel-head">
+        <div class="eyebrow">Account settings</div>
+        <h2>Your details</h2>
+        <p>Update your personal information. Changes are confirmed below.</p>
+      </div>
+      <div id="banner-profile" class="banner"></div>
+      <div class="card form-card" style="max-width:600px;">
+        <div class="profile-grid">
+          <div class="field"><label for="pf-name">Full name</label><input type="text" id="pf-name"></div>
+          <div class="field"><label for="pf-contact">Contact number</label><input type="text" id="pf-contact"></div>
+        </div>
+        <div class="field"><label for="pf-address">Address</label><input type="text" id="pf-address"></div>
+        <div class="field"><label for="pf-email">Email</label><input type="email" id="pf-email"></div>
+        <button class="btn btn-primary" onclick="handleProfileUpdate()">Save changes</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* =========================================================
+   Ledger — Banking Information System (prototype)
+   All data held in-memory for the duration of the session.
+   ========================================================= */
+
+const bank = {
+  users: {},          // accountNumber -> user object
+  nextAccNum: 1
+};
+let currentUser = null;
+
+function genAccountNumber(){
+  const n = bank.nextAccNum++;
+  return "LGR-" + String(n).padStart(6, "0");
+}
+
+function formatMoney(n){
+  const sign = n < 0 ? "-" : "";
+  return sign + "&#8377;" + Math.abs(n).toFixed(2);
+}
+function fMoney(n){
+  const sign = n < 0 ? "-" : "";
+  return sign + "\u20B9" + Math.abs(n).toFixed(2);
+}
+function formatDate(d){
+  return d.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) +
+         "  " + d.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+}
+
+function showBanner(elId, type, msg){
+  const el = document.getElementById(elId);
+  el.className = "banner show banner-" + type;
+  el.innerHTML = '<span class="dot"></span><span>' + msg + '</span>';
+}
+function hideBanner(elId){
+  const el = document.getElementById(elId);
+  el.className = "banner";
+  el.innerHTML = "";
+}
+
+/* ---------- tab switching (auth + deposit/withdraw) ---------- */
+document.querySelectorAll('.tabs').forEach(tabGroup => {
+  tabGroup.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabGroup.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const key = btn.dataset.tab;
+      const parent = tabGroup.parentElement;
+      parent.querySelectorAll('.form-block').forEach(fb => fb.classList.remove('active'));
+      const target = document.getElementById('form-' + key);
+      if(target) target.classList.add('active');
+    });
+  });
+});
+
+/* ---------- Registration ---------- */
+function handleRegister(){
+  hideBanner('banner-auth');
+  const name = document.getElementById('reg-name').value.trim();
+  const address = document.getElementById('reg-address').value.trim();
+  const contact = document.getElementById('reg-contact').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const deposit = parseFloat(document.getElementById('reg-deposit').value);
+  const pass = document.getElementById('reg-pass').value;
+
+  if(!name || !address || !contact){
+    showBanner('banner-auth','error','Name, address and contact number are required to open an account.');
+    return;
+  }
+  if(!pass || pass.length < 4){
+    showBanner('banner-auth','error','Choose a password of at least 4 characters.');
+    return;
+  }
+  if(isNaN(deposit) || deposit < 0){
+    showBanner('banner-auth','error','Enter a valid initial deposit amount (0 or more).');
+    return;
+  }
+
+  const accNum = genAccountNumber();
+  const user = {
+    accountNumber: accNum,
+    name, address, contact, email,
+    password: pass,
+    balance: deposit,
+    transactions: []
+  };
+  if(deposit > 0){
+    user.transactions.push({
+      type: 'deposit', label: 'Opening deposit',
+      amount: deposit, balanceAfter: deposit, date: new Date()
+    });
+  }
+  bank.users[accNum] = user;
+
+  showBanner('banner-auth','success',
+    'Account created successfully. Your account number is <strong>' + accNum + '</strong> &mdash; note it down, you\'ll need it to log in.');
+
+  // Pre-fill login form for convenience
+  document.getElementById('login-acc').value = accNum;
+  document.getElementById('reg-name').value = '';
+  document.getElementById('reg-address').value = '';
+  document.getElementById('reg-contact').value = '';
+  document.getElementById('reg-email').value = '';
+  document.getElementById('reg-deposit').value = '';
+  document.getElementById('reg-pass').value = '';
+
+  document.querySelector('.tab-btn[data-tab="login"]').click();
+}
+
+/* ---------- Login ---------- */
+function handleLogin(){
+  hideBanner('banner-auth');
+  const acc = document.getElementById('login-acc').value.trim();
+  const pass = document.getElementById('login-pass').value;
+
+  if(!acc || !pass){
+    showBanner('banner-auth','error','Enter both your account number and password.');
+    return;
+  }
+  const user = bank.users[acc];
+  if(!user){
+    showBanner('banner-auth','error','No account found with that account number.');
+    return;
+  }
+  if(user.password !== pass){
+    showBanner('banner-auth','error','Incorrect password. Please try again.');
+    return;
+  }
+  currentUser = user;
+  enterApp();
+}
+
+function handleLogout(){
+  currentUser = null;
+  document.getElementById('login-pass').value = '';
+  document.getElementById('app-screen').classList.remove('active');
+  document.getElementById('auth-screen').classList.add('active');
+}
+
+/* ---------- Enter app ---------- */
+function enterApp(){
+  document.getElementById('auth-screen').classList.remove('active');
+  document.getElementById('app-screen').classList.add('active');
+  document.getElementById('ov-hello').textContent = 'Welcome back, ' + currentUser.name.split(' ')[0];
+  refreshAll();
+  showPanel('overview');
+}
+
+function showPanel(name){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.nav-btn[data-panel="' + name + '"]').classList.add('active');
+  if(name === 'profile') fillProfileForm();
+}
+
+/* ---------- Refresh UI ---------- */
+function refreshAll(){
+  document.getElementById('side-acc-num').textContent = currentUser.accountNumber;
+  document.getElementById('side-acc-bal').innerHTML = fMoney(currentUser.balance);
+  document.getElementById('ov-balance').innerHTML = fMoney(currentUser.balance);
+
+  let deposits = 0, out = 0;
+  currentUser.transactions.forEach(t => {
+    if(t.type === 'deposit' || t.type === 'transfer-in') deposits += t.amount;
+    if(t.type === 'withdraw' || t.type === 'transfer-out') out += t.amount;
+  });
+  document.getElementById('ov-deposits').innerHTML = fMoney(deposits);
+  document.getElementById('ov-out').innerHTML = fMoney(out);
+
+  renderLedger('ov-recent', currentUser.transactions.slice(-5).reverse());
+  renderLedger('statement-ledger', currentUser.transactions.slice().reverse());
+}
+
+function typeLabel(t){
+  switch(t){
+    case 'deposit': return 'Deposit';
+    case 'withdraw': return 'Withdrawal';
+    case 'transfer-out': return 'Transfer out';
+    case 'transfer-in': return 'Transfer in';
+    default: return t;
+  }
+}
+
+function renderLedger(containerId, txns){
+  const el = document.getElementById(containerId);
+  if(!txns || txns.length === 0){
+    el.innerHTML = '<div class="empty-state"><div class="glyph">&mdash;</div>No transactions yet. Your activity will appear here.</div>';
+    return;
+  }
+  let html = '<div class="ledger-row head"><div>Date</div><div>Description</div><div style="text-align:right;">Amount</div><div class="bal-col" style="text-align:right;">Balance</div><div></div></div>';
+  txns.forEach(t => {
+    const isCredit = (t.type === 'deposit' || t.type === 'transfer-in');
+    html += '<div class="ledger-row">' +
+      '<div class="date">' + formatDate(t.date) + '</div>' +
+      '<div class="type"><span class="chip ' + t.type + '"></span>' + (t.label || typeLabel(t.type)) + '</div>' +
+      '<div class="amt ' + (isCredit ? 'pos' : 'neg') + '">' + (isCredit ? '+' : '-') + fMoney(t.amount) + '</div>' +
+      '<div class="amt bal-col">' + fMoney(t.balanceAfter) + '</div>' +
+      '<div></div>' +
+      '</div>';
+  });
+  el.innerHTML = html;
+}
+
+/* ---------- Deposit ---------- */
+function handleDeposit(){
+  hideBanner('banner-dw');
+  document.getElementById('dw-confirm').innerHTML = '';
+  const amt = parseFloat(document.getElementById('dep-amt').value);
+  if(isNaN(amt) || amt <= 0){
+    showBanner('banner-dw','error','Enter a valid deposit amount greater than zero.');
+    return;
+  }
+  currentUser.balance += amt;
+  const txn = {type:'deposit', label:'Cash deposit', amount:amt, balanceAfter:currentUser.balance, date:new Date()};
+  currentUser.transactions.push(txn);
+
+  showBanner('banner-dw','success','Deposit completed successfully.');
+  document.getElementById('dw-confirm').innerHTML =
+    '<div class="confirm-box"><div class="ctitle">Transaction confirmed</div>' +
+    '<div class="confirm-line"><span>Amount deposited</span><span>' + fMoney(amt) + '</span></div>' +
+    '<div class="confirm-line"><span>New balance</span><span>' + fMoney(currentUser.balance) + '</span></div>' +
+    '<div class="confirm-line"><span>Date</span><span>' + formatDate(txn.date) + '</span></div></div>';
+
+  document.getElementById('dep-amt').value = '';
+  refreshAll();
+}
+
+/* ---------- Withdraw ---------- */
+function handleWithdraw(){
+  hideBanner('banner-dw');
+  document.getElementById('dw-confirm').innerHTML = '';
+  const amt = parseFloat(document.getElementById('wd-amt').value);
+  if(isNaN(amt) || amt <= 0){
+    showBanner('banner-dw','error','Enter a valid withdrawal amount greater than zero.');
+    return;
+  }
+  if(amt > currentUser.balance){
+    showBanner('banner-dw','error','Insufficient funds. Your available balance is ' + fMoney(currentUser.balance) + '.');
+    return;
+  }
+  currentUser.balance -= amt;
+  const txn = {type:'withdraw', label:'Cash withdrawal', amount:amt, balanceAfter:currentUser.balance, date:new Date()};
+  currentUser.transactions.push(txn);
+
+  showBanner('banner-dw','success','Withdrawal completed successfully.');
+  document.getElementById('dw-confirm').innerHTML =
+    '<div class="confirm-box"><div class="ctitle">Transaction confirmed</div>' +
+    '<div class="confirm-line"><span>Amount withdrawn</span><span>' + fMoney(amt) + '</span></div>' +
+    '<div class="confirm-line"><span>New balance</span><span>' + fMoney(currentUser.balance) + '</span></div>' +
+    '<div class="confirm-line"><span>Date</span><span>' + formatDate(txn.date) + '</span></div></div>';
+
+  document.getElementById('wd-amt').value = '';
+  refreshAll();
+}
+
+/* ---------- Transfer ---------- */
+function handleTransfer(){
+  hideBanner('banner-tr');
+  document.getElementById('tr-confirm').innerHTML = '';
+  const recAcc = document.getElementById('tr-acc').value.trim();
+  const amt = parseFloat(document.getElementById('tr-amt').value);
+
+  if(!recAcc){
+    showBanner('banner-tr','error','Enter the recipient\'s account number.');
+    return;
+  }
+  if(recAcc === currentUser.accountNumber){
+    showBanner('banner-tr','error','You cannot transfer funds to your own account.');
+    return;
+  }
+  const recipient = bank.users[recAcc];
+  if(!recipient){
+    showBanner('banner-tr','error','No registered account found with number ' + recAcc + '.');
+    return;
+  }
+  if(isNaN(amt) || amt <= 0){
+    showBanner('banner-tr','error','Enter a valid transfer amount greater than zero.');
+    return;
+  }
+  if(amt > currentUser.balance){
+    showBanner('banner-tr','error','Insufficient funds. Your available balance is ' + fMoney(currentUser.balance) + '.');
+    return;
+  }
+
+  currentUser.balance -= amt;
+  recipient.balance += amt;
+  const now = new Date();
+  currentUser.transactions.push({type:'transfer-out', label:'Transfer to ' + recAcc, amount:amt, balanceAfter:currentUser.balance, date:now});
+  recipient.transactions.push({type:'transfer-in', label:'Transfer from ' + currentUser.accountNumber, amount:amt, balanceAfter:recipient.balance, date:now});
+
+  showBanner('banner-tr','success','Transfer completed successfully.');
+  document.getElementById('tr-confirm').innerHTML =
+    '<div class="confirm-box"><div class="ctitle">Transfer confirmed</div>' +
+    '<div class="confirm-line"><span>Recipient</span><span>' + recAcc + '</span></div>' +
+    '<div class="confirm-line"><span>Amount sent</span><span>' + fMoney(amt) + '</span></div>' +
+    '<div class="confirm-line"><span>Your new balance</span><span>' + fMoney(currentUser.balance) + '</span></div>' +
+    '<div class="confirm-line"><span>Date</span><span>' + formatDate(now) + '</span></div></div>';
+
+  document.getElementById('tr-acc').value = '';
+  document.getElementById('tr-amt').value = '';
+  refreshAll();
+}
+
+/* ---------- Profile ---------- */
+function fillProfileForm(){
+  document.getElementById('pf-name').value = currentUser.name;
+  document.getElementById('pf-address').value = currentUser.address;
+  document.getElementById('pf-contact').value = currentUser.contact;
+  document.getElementById('pf-email').value = currentUser.email || '';
+}
+function handleProfileUpdate(){
+  hideBanner('banner-profile');
+  const name = document.getElementById('pf-name').value.trim();
+  const address = document.getElementById('pf-address').value.trim();
+  const contact = document.getElementById('pf-contact').value.trim();
+  const email = document.getElementById('pf-email').value.trim();
+
+  if(!name || !address || !contact){
+    showBanner('banner-profile','error','Name, address and contact number cannot be empty.');
+    return;
+  }
+  currentUser.name = name;
+  currentUser.address = address;
+  currentUser.contact = contact;
+  currentUser.email = email;
+
+  showBanner('banner-profile','success','Account information updated successfully.');
+  document.getElementById('ov-hello').textContent = 'Welcome back, ' + currentUser.name.split(' ')[0];
+}
+
+/* ---------- Seed a demo account so the transfer flow can be tested immediately ---------- */
+(function seedDemo(){
+  const demoAcc = genAccountNumber();
+  bank.users[demoAcc] = {
+    accountNumber: demoAcc,
+    name: 'Demo Recipient',
+    address: '12 College Road, Tiruchirappalli',
+    contact: '9000000000',
+    email: 'demo@ledger.test',
+    password: 'demo',
+    balance: 5000,
+    transactions: [{type:'deposit', label:'Opening deposit', amount:5000, balanceAfter:5000, date:new Date()}]
+  };
+})();
+</script>
+</body>
+</html>
